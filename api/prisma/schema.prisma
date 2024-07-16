@@ -14,16 +14,51 @@ datasource db {
 }
 
 model User {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  email      String    @unique
-  username   String    @unique
-  password   String
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  email    String    @unique
+  username String    @unique
+  password String
+  posts    Post[]
+  likes    Like[]
+  comments Comment[]
 }
 
 model PasswordReset {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  email      String
-  token      String    @unique
-  expiresAt  DateTime
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  token     String   @unique
+  expiresAt DateTime
 }
 
+model Post {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  images    String[]
+  authorId  String    @db.ObjectId
+  author    User      @relation(fields: [authorId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  likes     Like[]
+  comments  Comment[]
+}
+
+model Like {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+}
