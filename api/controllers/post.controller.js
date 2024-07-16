@@ -134,7 +134,7 @@ export const likePost = async (req, res) => {
         },
       });
 
-      console.log(existingLike)
+      //console.log(existingLike)
   
       if (existingLike) {
         await prisma.like.delete({
@@ -158,32 +158,5 @@ export const likePost = async (req, res) => {
   };
   
 
-  export const commentPost = async (req, res) => {
-    const postId = req.params.id;
-    const userId = req.userId;
-    const { content } = req.body;
-  
-    try {
-      const post = await prisma.post.findUnique({
-        where: { id: postId },
-      });
-  
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
-      }
-  
-      const newComment = await prisma.comment.create({
-        data: {
-          content,
-          postId,
-          userId,
-        },
-      });
-  
-      res.status(201).json(newComment);
-    } catch (err) {
-      res.status(500).json({ message: "Failed to comment on post" });
-    }
-  };
   
   
