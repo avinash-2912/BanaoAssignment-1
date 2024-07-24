@@ -11,6 +11,6 @@ app.use(cookieParser())
 app.use("/api/auth",authRoute);
 app.use("/api/posts",postRoute);
 
-app.listen(8800,()=>{
+app.listen("https://banaoassignment-1.onrender.com/",()=>{
     console.log("Server is running!")
 })
