@@ -77,6 +77,10 @@ export const updatePost = async (req, res) => {
   const id = req.params.id;
   const userId = req.userId;
   const { content, images } = req.body;
+  const encImages = [];
+  images.forEach((image,id) =>{
+     encImages.push(encrypt(image))
+  })
   try {
     const postToUpdate = await prisma.post.findUnique({
       where: { id },
@@ -92,8 +96,8 @@ export const updatePost = async (req, res) => {
     const updatedPost = await prisma.post.update({
       where: { id },
       data: {
-        content,
-        images,
+        content:encrypt(content),
+        images:encImages,
       },
     });
     res.status(200).json(updatedPost);
