@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma.js";
 import { v4 as uuidv4 } from "uuid";
+import { hash } from "../lib/encryption.js";
 
 export const register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -56,6 +57,7 @@ export const login = async (req, res) => {
       .cookie("token", token, {
         httpOnly: true,
         maxAge: age,
+        secure:true,
       })
       .status(200)
       .json(userInfo);
@@ -85,7 +87,7 @@ export const forgotPassword = async (req, res) => {
     await prisma.passwordReset.create({
       data: {
         email,
-        token: resetToken,
+        token: hash(resetToken),
         expiresAt: new Date(Date.now() + 3600000),
       },
     });
@@ -106,7 +108,7 @@ export const resetPassword = async (req, res) => {
     const resetRequest = await prisma.passwordReset.findFirst({
       where: {
         email,
-        token,
+        token:hash(token),
         expiresAt: {
           gte: new Date(),
         },

@@ -1,3 +1,4 @@
+import { decrypt, encrypt } from "../lib/encryption.js";
 import prisma from "../lib/prisma.js";
 
 export const getPosts = async (req, res) => {
@@ -12,6 +13,11 @@ export const getPosts = async (req, res) => {
         likes: true,
         comments: true,
       },
+    });
+
+    posts.forEach((post) => {
+      post.content = decrypt(post.content); 
+      post.images = post.images.map(image => decrypt(image));
     });
 
     res.status(200).json(posts);
@@ -36,6 +42,10 @@ export const getPost = async (req, res) => {
         comments: true,
       },
     });
+    
+    const encContent = post.content;
+    post.content = decrypt(encContent)
+
     res.status(200).json(post);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch post" });
@@ -44,12 +54,16 @@ export const getPost = async (req, res) => {
 
 export const addPost = async (req, res) => {
   const { content, images } = req.body;
+  const encImages = [];
+  images.forEach((image,id) =>{
+     encImages.push(encrypt(image))
+  })
   const userId = req.userId;
   try {
     const newPost = await prisma.post.create({
       data: {
-        content,
-        images,
+        content:encrypt(content),
+        images:encImages,
         authorId: userId,
       },
     });
