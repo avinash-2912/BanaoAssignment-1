@@ -15,10 +15,17 @@ export const getPosts = async (req, res) => {
       },
     });
 
-    posts.forEach((post) => {
-      post.content = decrypt(post.content); 
-      post.images = post.images.map(image => decrypt(image));
-    });
+    if (posts && posts.length > 0) {
+      posts.forEach((post) => {
+        if (post.content) {
+          post.content = decrypt(post.content); 
+        }
+
+        if (post.images && post.images.length > 0) {
+          post.images = post.images.map(image => decrypt(image)); 
+        }
+      });
+    }
 
     res.status(200).json(posts);
   } catch (err) {
@@ -45,6 +52,9 @@ export const getPost = async (req, res) => {
     
     const encContent = post.content;
     post.content = decrypt(encContent)
+    if (post.images && post.images.length > 0) {
+      post.images = post.images.map(image => decrypt(image)); 
+    }
 
     res.status(200).json(post);
   } catch (err) {
@@ -55,21 +65,25 @@ export const getPost = async (req, res) => {
 export const addPost = async (req, res) => {
   const { content, images } = req.body;
   const encImages = [];
-  images.forEach((image,id) =>{
-     encImages.push(encrypt(image))
-  })
+
+  if (images && Array.isArray(images)) {
+    images.forEach((image) => {
+      encImages.push(encrypt(image));
+    });
+  }
+
   const userId = req.userId;
   try {
     const newPost = await prisma.post.create({
       data: {
-        content:encrypt(content),
-        images:encImages,
+        content: content ? encrypt(content) : null,
+        images: encImages.length > 0 ? encImages : [],
         authorId: userId,
       },
     });
     res.status(201).json(newPost);
   } catch (err) {
-    res.status(500).json({ message: "failed to create post" });
+    res.status(500).json({ message: "Failed to create post" });
   }
 };
 
@@ -78,28 +92,34 @@ export const updatePost = async (req, res) => {
   const userId = req.userId;
   const { content, images } = req.body;
   const encImages = [];
-  images.forEach((image,id) =>{
-     encImages.push(encrypt(image))
-  })
+
+  if (images && Array.isArray(images) && images.length > 0) {
+    images.forEach((image) => {
+      encImages.push(encrypt(image));
+    });
+  }
+
   try {
     const postToUpdate = await prisma.post.findUnique({
       where: { id },
     });
+
     if (!postToUpdate) {
       return res.status(404).json({ message: "Post not found!" });
     }
+
     if (postToUpdate.authorId !== userId) {
-      return res
-        .status(403)
-        .json({ message: "You are not Authorized to update this post!" });
+      return res.status(403).json({ message: "You are not authorized to update this post!" });
     }
+
     const updatedPost = await prisma.post.update({
       where: { id },
       data: {
-        content:encrypt(content),
-        images:encImages,
+        content: content ? encrypt(content) : postToUpdate.content,
+        images: encImages.length > 0 ? encImages : postToUpdate.images,
       },
     });
+
     res.status(200).json(updatedPost);
   } catch (err) {
     res.status(500).json({ message: "Failed to update post" });
